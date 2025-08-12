@@ -2,7 +2,6 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import TrackerPage from './TrackerPage';
-// --- PERUBAHAN DI SINI: Impor logo sebagai variabel ---
 import logo from '/logo-barantin.png';
 
 const queryClient = new QueryClient();
@@ -10,8 +9,9 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      {/* --- PERUBAHAN DI SINI: Menambahkan class flexbox --- */}
       <div 
-        className="min-h-screen font-sans"
+        className="min-h-screen font-sans flex flex-col" // Menjadikan ini container flex vertikal
         style={{
             backgroundColor: '#f1f5f9',
             backgroundImage: `radial-gradient(#cbd5e1 1px, transparent 1px)`,
@@ -21,7 +21,6 @@ function App() {
         <header className="bg-white shadow-md">
           <div className="container mx-auto px-4 h-20 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                  {/* --- PERUBAHAN DI SINI: Gunakan variabel logo yang diimpor --- */}
                   <img src={logo} alt="Logo BKHIT" className="w-12 h-12" />
                   <div>
                       <h1 className="text-xl font-bold text-gray-800">Pelacakan Sampel</h1>
@@ -31,7 +30,8 @@ function App() {
           </div>
         </header>
         
-        <main className="container mx-auto p-4 md:p-8">
+        {/* --- PERUBAHAN DI SINI: Menambahkan class flex-grow --- */}
+        <main className="container mx-auto p-4 md:p-8 flex-grow"> {/* Membuat main content tumbuh mengisi ruang kosong */}
           <TrackerPage />
         </main>
 
