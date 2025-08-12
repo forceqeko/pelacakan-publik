@@ -1,9 +1,10 @@
 // Lokasi: src/App.tsx (di proyek pelacakan-publik)
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import TrackerPage from './TrackerPage'; // Kita akan letakkan TrackerPage langsung di src
+import TrackerPage from './TrackerPage';
+// --- PERUBAHAN DI SINI: Impor logo sebagai variabel ---
+import logo from '/logo-barantin.png';
 
-// Buat instance QueryClient
 const queryClient = new QueryClient();
 
 function App() {
@@ -20,7 +21,8 @@ function App() {
         <header className="bg-white shadow-md">
           <div className="container mx-auto px-4 h-20 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                  <img src="/logo-barantin.png" alt="Logo BKHIT" className="w-12 h-12" />
+                  {/* --- PERUBAHAN DI SINI: Gunakan variabel logo yang diimpor --- */}
+                  <img src={logo} alt="Logo BKHIT" className="w-12 h-12" />
                   <div>
                       <h1 className="text-xl font-bold text-gray-800">Pelacakan Sampel</h1>
                       <p className="text-sm text-gray-500">Laboratorium Karantina Ikan Sulawesi Utara</p>
