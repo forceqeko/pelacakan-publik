@@ -22,7 +22,6 @@ function SearchResult({ sample }: { sample: Sample }) {
 
     const statusInfo = getStatusInfo(sample.Status, sample.Hasil);
 
-    // --- PERUBAHAN DI SINI: Tata letak kartu hasil dirombak total ---
     return (
         <div className="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-lg animate-fade-in border-t-4 border-teal-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 mb-4">
@@ -85,16 +84,21 @@ export default function TrackerPage() {
     });
 
     useEffect(() => {
-        let timer: number;
+        let timerId: number | undefined;
+
         if (isLoading) {
-            timer = setTimeout(() => {
+            timerId = setTimeout(() => {
                 setLoadingMessage('Menghubungi server, ini mungkin butuh waktu lebih lama...');
             }, 3000);
         } else {
             setLoadingMessage('Mencari Sampel...');
         }
 
-        return () => clearTimeout(timer);
+        return () => {
+            if (timerId) {
+                clearTimeout(timerId);
+            }
+        };
     }, [isLoading]);
 
 
@@ -129,21 +133,22 @@ export default function TrackerPage() {
             </div>
 
             <div className="mt-8">
+                {/* --- PERUBAHAN DI SINI: Mengembalikan card untuk semua state --- */}
                 {!executedSearch && (
-                    <div className="flex flex-col items-center justify-center text-center p-10">
+                    <div className="flex flex-col items-center justify-center text-center p-10 bg-white rounded-xl shadow-lg">
                         <PackageSearch className="text-gray-400 mb-4" size={48} />
                         <h3 className="text-xl font-bold text-gray-700">Menunggu Kode Sampel</h3>
                         <p className="text-gray-500">Silakan masukkan kode untuk memulai pelacakan.</p>
                     </div>
                 )}
                 {isLoading && (
-                    <div className="flex flex-col items-center justify-center text-center p-10">
+                    <div className="flex flex-col items-center justify-center text-center p-10 bg-white rounded-xl shadow-lg">
                         <Loader2 className="animate-spin text-teal-600 mb-4" size={48} />
                         <h3 className="text-xl font-bold text-gray-700">{loadingMessage}</h3>
                     </div>
                 )}
                 {isError && (
-                    <div className="flex flex-col items-center justify-center text-center p-10 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex flex-col items-center justify-center text-center p-10 bg-red-50 border border-red-200 rounded-lg shadow-lg">
                         <Frown className="text-red-500 mb-4" size={48} />
                         <h3 className="text-xl font-bold text-red-700">Terjadi Kesalahan</h3>
                         <p className="text-red-600">{(error as Error).message}</p>
