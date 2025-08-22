@@ -1,30 +1,31 @@
 // Lokasi: src/lib/api.ts (di proyek pelacakan-publik)
 
-// PENTING: Pastikan URL ini sama dengan URL di aplikasi internal Anda
-const API_URL = "https://script.google.com/macros/s/AKfycbx1COmbI12sIsHZOdF_VhqR8StG7hmhYSmXLIKWI_8c9fZlM91mpojRgrzWOZKRA_Ncnw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyzEEtqUHq0AJB8eKriDX2kx4zQhFkL3sd4Nh-CX5XNiH5uq-34shq1bwmPZ_zfRNfJ/exec";
 
-// Tipe data untuk satu sampel
+export type Category = 'ikan' | 'hewan' | 'tumbuhan';
+
+// --- PERUBAHAN DI SINI: Menambahkan Riwayat Status ---
 export type Sample = {
   'Kode Sampel': string;
   'Spesies': string;
   'Lokasi Asal': string;
-  'Tanggal Kedatangan Sampel': string;
-  'Nama Pengirim': string;
+  'Tanggal Pengambilan Sampel': string;
+  'Nama Pemilik': string;
   'Status': string;
   'Progress': string;
   'Hasil': string; 
+  'Riwayat Status': string; // Ini akan berisi JSON string dari riwayat
 };
 
 /**
- * Mengambil data satu sampel berdasarkan kodenya.
- * Ini adalah satu-satunya fungsi API yang dibutuhkan oleh aplikasi publik.
+ * Mengambil data satu sampel berdasarkan kategori dan kodenya.
  */
-export const fetchSampleByCode = async (kodeSampel: string): Promise<Sample> => {
-  if (!kodeSampel) {
-    throw new Error("Kode sampel tidak boleh kosong.");
+export const fetchSampleByCode = async (category: Category, kodeSampel: string): Promise<Sample> => {
+  if (!category || !kodeSampel) {
+    throw new Error("Kategori dan Kode Sampel tidak boleh kosong.");
   }
   
-  const response = await fetch(`${API_URL}?action=getSampleByCode&kodeSampel=${encodeURIComponent(kodeSampel)}`);
+  const response = await fetch(`${API_URL}?action=getSampleByCode&category=${category}&kodeSampel=${encodeURIComponent(kodeSampel)}`);
   
   if (!response.ok) {
     throw new Error('Gagal terhubung ke server. Coba lagi nanti.');

@@ -2,90 +2,112 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Info, FlaskConical, Calendar, CheckCircle, XCircle, Loader2, Frown, PackageSearch, Clock, FileText } from 'lucide-react';
-import { fetchSampleByCode, type Sample } from './lib/api';
+import { Search, Info, FlaskConical, Calendar, CheckCircle, Loader2, Frown, PackageSearch, FileText, Hourglass } from 'lucide-react';
+import { fetchSampleByCode, type Sample, type Category } from './lib/api';
 
-// Komponen untuk menampilkan hasil pencarian
+// Tipe untuk satu item riwayat
+type HistoryItem = {
+    status: string;
+    timestamp: string;
+};
+
+// Komponen untuk menampilkan hasil pencarian dalam bentuk timeline
 function SearchResult({ sample }: { sample: Sample }) {
-    const getStatusInfo = (status: string, hasil: string) => {
-        const s = status.toLowerCase();
-        const h = hasil?.toLowerCase();
+    const [history, setHistory] = useState<HistoryItem[]>([]);
 
-        if (s === 'selesai') {
-            if (h === 'positif') return { text: 'Selesai (Positif)', color: 'bg-red-100 text-red-700', icon: <XCircle /> };
-            if (h === 'negatif') return { text: 'Selesai (Negatif)', color: 'bg-green-100 text-green-700', icon: <CheckCircle /> };
-            return { text: 'Selesai', color: 'bg-gray-100 text-gray-700', icon: <CheckCircle /> };
+    const allStages = [
+        "Menunggu",
+        "Disetujui Admin",
+        "Sampel sedang di Uji",
+        "Sampel Selesai di Uji"
+    ];
+
+    useEffect(() => {
+        try {
+            const parsedHistory = JSON.parse(sample['Riwayat Status'] || '[]');
+            setHistory(parsedHistory);
+        } catch (e) {
+            console.error("Gagal mem-parse riwayat status:", e);
+            setHistory([]);
         }
-        if (s.includes('proses')) return { text: status, color: 'bg-yellow-100 text-yellow-700', icon: <Clock /> };
-        return { text: 'Menunggu', color: 'bg-blue-100 text-blue-700', icon: <Clock /> };
-    };
+    }, [sample]);
+    
+    const lastCompletedStageIndex = allStages.findIndex(stage => 
+        stage.toLowerCase() === history[history.length - 1]?.status.toLowerCase()
+    );
 
-    const statusInfo = getStatusInfo(sample.Status, sample.Hasil);
+    // --- PERUBAHAN DI SINI: Memperbaiki logika ikon ---
+    const getStatusIcon = (stage: string, isCompleted: boolean, isCurrent: boolean) => {
+        if (isCurrent) {
+            // Jika status saat ini adalah "Disetujui Admin", tampilkan ceklis, bukan loading
+            if (stage.toLowerCase() === "disetujui admin") {
+                return <CheckCircle className="text-white" />;
+            }
+            return <Loader2 className="text-white animate-spin" />;
+        }
+        if (isCompleted) return <CheckCircle className="text-white" />;
+        return <Hourglass className="text-white" />;
+    };
 
     return (
         <div className="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-lg animate-fade-in border-t-4 border-teal-500">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 mb-4">
-                <div>
-                    <p className="text-sm text-gray-500">Hasil Pelacakan</p>
-                    <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                        <FileText size={24} className="text-teal-600"/>
-                        {sample['Kode Sampel']}
-                    </h2>
-                </div>
-                <div className={`mt-4 sm:mt-0 flex items-center gap-2 px-3 py-1.5 rounded-full font-semibold text-sm ${statusInfo.color}`}>
-                    {statusInfo.icon}
-                    <span>{statusInfo.text}</span>
+            <div className="pb-4 mb-6 border-b">
+                <p className="text-sm text-gray-500">Hasil Pelacakan</p>
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <FileText size={24} className="text-teal-600"/>
+                    {sample['Kode Sampel']}
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
+                    <div className="flex items-center gap-2"><FlaskConical size={16} className="text-gray-400"/> <span>{sample.Spesies}</span></div>
+                    <div className="flex items-center gap-2"><Info size={16} className="text-gray-400"/> <span>{sample['Lokasi Asal']}</span></div>
+                    <div className="flex items-center gap-2"><Calendar size={16} className="text-gray-400"/> <span>{new Date(sample['Tanggal Pengambilan Sampel']).toLocaleDateString('id-ID')}</span></div>
                 </div>
             </div>
 
-            <div className="space-y-4 bg-slate-50 p-4 rounded-lg">
-                <p className="text-md font-semibold text-gray-700">Progress Terakhir:</p>
-                <p className="text-lg text-gray-900">{sample.Progress || 'Belum ada progress'}</p>
-            </div>
+            <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-6">Riwayat Status</h3>
+                <ol className="relative border-l border-gray-200">
+                    {allStages.map((stage, index) => {
+                        const historyEntry = history.find(h => h.status.toLowerCase() === stage.toLowerCase());
+                        const isCompleted = index < lastCompletedStageIndex;
+                        const isCurrent = index === lastCompletedStageIndex;
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 mt-4 border-t">
-                <div className="flex items-center gap-3">
-                    <FlaskConical className="text-gray-400" size={20} />
-                    <div>
-                        <p className="text-xs text-gray-500">Spesies</p>
-                        <p className="font-semibold">{sample.Spesies}</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <Info className="text-gray-400" size={20} />
-                    <div>
-                        <p className="text-xs text-gray-500">Asal</p>
-                        <p className="font-semibold">{sample['Lokasi Asal']}</p>
-                    </div>
-                </div>
-                 <div className="flex items-center gap-3">
-                    <Calendar className="text-gray-400" size={20} />
-                    <div>
-                        <p className="text-xs text-gray-500">Tgl. Diterima</p>
-                        <p className="font-semibold">{new Date(sample['Tanggal Kedatangan Sampel']).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-                    </div>
-                </div>
+                        return (
+                            <li key={stage} className="mb-8 ml-8">
+                                <span className={`absolute flex items-center justify-center w-8 h-8 rounded-full -left-4 ring-4 ring-white ${isCurrent ? 'bg-teal-500' : (isCompleted ? 'bg-green-500' : 'bg-gray-400')}`}>
+                                    {getStatusIcon(stage, isCompleted, isCurrent)}
+                                </span>
+                                <h3 className={`text-lg font-semibold ${isCurrent || isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>{stage}</h3>
+                                {historyEntry && (
+                                    <time className="block text-sm font-normal text-gray-400">
+                                        {new Date(historyEntry.timestamp).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}
+                                    </time>
+                                )}
+                            </li>
+                        );
+                    })}
+                </ol>
             </div>
         </div>
     );
 }
 
 export default function TrackerPage() {
+    const [selectedCategory, setSelectedCategory] = useState<Category>('ikan');
     const [searchTerm, setSearchTerm] = useState('');
-    const [executedSearch, setExecutedSearch] = useState('');
+    const [executedSearch, setExecutedSearch] = useState({ term: '', category: '' });
     const [loadingMessage, setLoadingMessage] = useState('Mencari Sampel...');
 
     const { data: sample, isLoading, isError, error, isSuccess } = useQuery({
-        queryKey: ['sample', executedSearch],
-        queryFn: () => fetchSampleByCode(executedSearch),
-        enabled: !!executedSearch,
+        queryKey: ['sample', executedSearch.category, executedSearch.term],
+        queryFn: () => fetchSampleByCode(executedSearch.category as Category, executedSearch.term),
+        enabled: !!executedSearch.term && !!executedSearch.category,
         retry: false,
         refetchOnWindowFocus: false,
     });
 
     useEffect(() => {
         let timerId: number | undefined;
-
         if (isLoading) {
             timerId = setTimeout(() => {
                 setLoadingMessage('Menghubungi server, ini mungkin butuh waktu lebih lama...');
@@ -93,19 +115,13 @@ export default function TrackerPage() {
         } else {
             setLoadingMessage('Mencari Sampel...');
         }
-
-        return () => {
-            if (timerId) {
-                clearTimeout(timerId);
-            }
-        };
+        return () => { if (timerId) clearTimeout(timerId); };
     }, [isLoading]);
-
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchTerm.trim()) {
-            setExecutedSearch(searchTerm.trim());
+            setExecutedSearch({ term: searchTerm.trim(), category: selectedCategory });
         }
     };
 
@@ -113,8 +129,19 @@ export default function TrackerPage() {
         <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
                 <h2 className="text-2xl font-bold text-gray-800 text-center">Lacak Status Sampel Anda</h2>
-                <p className="text-center text-gray-500 mt-2">Masukkan Kode Sampel yang Anda terima untuk melihat progress pengujian.</p>
+                <p className="text-center text-gray-500 mt-2">Pilih kategori, lalu masukkan Kode Sampel untuk melihat progress pengujian.</p>
                 <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mt-6">
+                    <div>
+                        <select 
+                            value={selectedCategory} 
+                            onChange={e => setSelectedCategory(e.target.value as Category)}
+                            className="h-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+                        >
+                            <option value="ikan">Ikan</option>
+                            <option value="hewan">Hewan</option>
+                            <option value="tumbuhan">Tumbuhan</option>
+                        </select>
+                    </div>
                     <div className="relative flex-grow">
                         <input
                             type="text"
@@ -126,19 +153,18 @@ export default function TrackerPage() {
                         <Search size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     </div>
                     <button type="submit" disabled={isLoading} className="px-8 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 flex items-center justify-center gap-2 transition disabled:bg-teal-400">
-                        {isLoading ? <Loader2 className="animate-spin" size={20}/> : <Search size={18} />}
-                        <span>{isLoading ? 'Mencari...' : 'Lacak'}</span>
+                        <Search size={18} />
+                        <span>Lacak</span>
                     </button>
                 </form>
             </div>
 
             <div className="mt-8">
-                {/* --- PERUBAHAN DI SINI: Mengembalikan card untuk semua state --- */}
-                {!executedSearch && (
+                {!executedSearch.term && (
                     <div className="flex flex-col items-center justify-center text-center p-10 bg-white rounded-xl shadow-lg">
                         <PackageSearch className="text-gray-400 mb-4" size={48} />
                         <h3 className="text-xl font-bold text-gray-700">Menunggu Kode Sampel</h3>
-                        <p className="text-gray-500">Silakan masukkan kode untuk memulai pelacakan.</p>
+                        <p className="text-gray-500">Silakan pilih kategori dan masukkan kode untuk memulai pelacakan.</p>
                     </div>
                 )}
                 {isLoading && (
