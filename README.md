@@ -1,69 +1,103 @@
-# React + TypeScript + Vite
+# 🔍 Pelacakan Sampel - Aplikasi Publik
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplikasi web untuk melacak status sampel laboratorium BKHIT Sulawesi Utara secara real-time.
 
-Currently, two official plugins are available:
+## 🚀 Fitur Utama
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- ✅ **Pencarian Real-time** - Lacak status sampel dengan kode sampel
+- ✅ **Timeline Visual** - Lihat progress pengujian dengan timeline interaktif
+- ✅ **Design Modern** - UI/UX dengan glassmorphism dan animations
+- ✅ **Responsive** - Optimal di desktop, tablet, dan mobile
+- ✅ **Real-time Updates** - Data terbaru dari Google Sheets
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend**: React 18 + TypeScript
+- **Styling**: Tailwind CSS v3.4.4
+- **Icons**: Lucide React
+- **Data Fetching**: TanStack React Query
+- **Build Tool**: Vite
+- **Backend**: Google Apps Script
+- **Database**: Google Sheets
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 📝 Setup & Development
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+```bash
+# Install dependencies
+npm install
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Deploy to GitHub Pages
+npm run deploy
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## ⚠️ CSS Linting Warning
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+File `src/index.css` menampilkan warning "Unknown at rule @tailwind". Ini adalah warning normal dari CSS linter yang tidak mengenali direktif Tailwind CSS.
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Mengapa Warning Ini Muncul?
+- `@tailwind base`, `@tailwind components`, `@tailwind utilities` adalah direktif khusus Tailwind CSS
+- CSS linter standar tidak mengenali direktif ini
+- Warning ini **TIDAK** mempengaruhi functionality aplikasi
+
+### Solusi yang Sudah Diterapkan:
+1. ✅ **VS Code Settings** - File `.vscode/settings.json` dengan konfigurasi CSS validation disabled
+2. ✅ **CSS Custom Data** - File `.vscode/css_custom_data.json` untuk define Tailwind directives
+3. ✅ **Build Test** - `npm run build` berhasil tanpa error
+4. ✅ **Stylelint Config** - File `.stylelintrc.json` untuk ignore Tailwind rules
+
+### Cara Mengatasi Warning di Editor Lain:
+```css
+/* Untuk editor yang tidak support Tailwind */
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind base;
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind components;
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind utilities;
 ```
+
+## 🎨 Custom Animations
+
+Aplikasi menggunakan custom CSS animations:
+- `fadeInUp` - Entrance animation untuk cards
+- `slideInFromLeft` - Side animation untuk timeline
+- `float` - Floating animation untuk icons
+- `glow` - Glow effect untuk buttons
+- `gradientShift` - Animated gradient text
+
+## 📱 Browser Support
+
+- ✅ Chrome 80+
+- ✅ Firefox 75+
+- ✅ Safari 13+
+- ✅ Edge 80+
+
+## 🏗️ Project Structure
+
+```
+pelacakan-publik/
+├── .vscode/              # VS Code settings
+├── src/
+│   ├── lib/             # API utilities
+│   ├── index.css        # Tailwind + Custom CSS
+│   ├── App.tsx          # Main app component
+│   └── TrackerPage.tsx  # Tracking interface
+├── public/              # Static assets
+└── dist/               # Build output
+```
+
+## 🔧 Build Output
+
+- ✅ CSS: ~20.90 kB (gzipped: 4.51 kB)
+- ✅ JS: ~239.63 kB (gzipped: 73.91 kB)
+- ✅ Build time: ~19.30s
+
+---
+
+**📞 Support**: Untuk pertanyaan teknis, hubungi tim development BKHIT Sulawesi Utara.

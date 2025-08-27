@@ -4,17 +4,42 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyzEEtqUHq0AJB8eKriDX2k
 
 export type Category = 'ikan' | 'hewan' | 'tumbuhan';
 
-// --- PERUBAHAN DI SINI: Menambahkan Riwayat Status ---
 export type Sample = {
   'Kode Sampel': string;
-  'Spesies': string;
-  'Lokasi Asal': string;
   'Tanggal Pengambilan Sampel': string;
   'Nama Pemilik': string;
+  'No. Whatsapp': string;
+  'Jenis Sampel': string;
+  'Berat (kg)': number;
+  'Catatan': string;
   'Status': string;
   'Progress': string;
   'Hasil': string; 
-  'Riwayat Status': string; // Ini akan berisi JSON string dari riwayat
+  'Timestamp': string;
+  'Timestamp KI-2'?: string;
+  'Riwayat Status'?: string;
+  // Kolom baru yang ditambahkan
+  'Nama Petugas Pengambil Sampel': string;
+  'Asal Wilayah Kerja': string;
+  'Nomor Agenda': string;
+  'Nama Komoditas / Nama Ilmiah': string;
+  'Jumlah Sampel': number;
+  'Target Uji': string;
+  'Target HPI / HPIK': string;
+  'Metode Uji': string;
+  'Status Pengujian': string;
+  'Tanggal Penerimaan Sampel': string;
+
+  // Kolom untuk F.A.3.2 (Tanda Terima Sampel)
+  'Cara Pengiriman Sampel'?: string;
+  'Alamat'?: string;
+  'HS Code'?: string;
+  'Jumlah Kontainer/Lot'?: string;
+  'Lama Pengujian'?: string;
+  
+  // Kolom untuk tahap pengujian selanjutnya
+  'Analis'?: string;
+  'Tanggal Mulai Uji'?: string;
 };
 
 /**
