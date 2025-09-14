@@ -25,7 +25,7 @@ export type Sample = {
   'Nama Komoditas / Nama Ilmiah': string;
   'Jumlah Sampel': number;
   'Target Uji': string;
-  'Target HPI / HPIK': string;
+  'Target Penyakit': string;
   'Metode Uji': string;
   'Status Pengujian': string;
   'Tanggal Penerimaan Sampel': string;
@@ -40,6 +40,9 @@ export type Sample = {
   // Kolom untuk tahap pengujian selanjutnya
   'Analis'?: string;
   'Tanggal Mulai Uji'?: string;
+
+  // Kolom untuk F.T.3.6 (Rekomendasi Simpulan)
+  'Simpulan'?: string;
 };
 
 /**

@@ -1,8 +1,8 @@
 // Lokasi: src/TrackerPage.tsx (di proyek pelacakan-publik)
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Info, FlaskConical, Calendar, CheckCircle, Loader2, Frown, PackageSearch, FileText, Hourglass, Clock } from 'lucide-react';
+import { Search, Info, FlaskConical, Calendar, CheckCircle, Loader2, Frown, PackageSearch, FileText, Hourglass, Clock, ChevronsUpDown } from 'lucide-react';
 import { fetchSampleByCode, type Sample, type Category } from './lib/api';
 
 // Tipe untuk satu item riwayat
@@ -11,17 +11,132 @@ type HistoryItem = {
     timestamp: string;
 };
 
+// Tipe untuk dropdown option
+type DropdownOption = {
+    value: string;
+    label: string;
+};
+
+// Custom Dropdown Component dengan animasi seperti aplikasi internal
+function CustomDropdown({ 
+    label, 
+    value, 
+    onSelect, 
+    options, 
+    placeholder,
+    searchable = false 
+}: {
+    label: string;
+    value: string;
+    onSelect: (value: string) => void;
+    options: DropdownOption[];
+    placeholder: string;
+    searchable?: boolean;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Filter options based on search
+    const filteredOptions = useMemo(() => 
+        searchable 
+            ? options.filter(option => 
+                option.label.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+            : options,
+        [options, searchTerm, searchable]
+    );
+
+    // Click outside handler
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+                setSearchTerm('');
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleSelect = (optionValue: string) => {
+        onSelect(optionValue);
+        setIsOpen(false);
+        setSearchTerm('');
+    };
+
+    const selectedOption = options.find(opt => opt.value === value);
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <label className="absolute left-4 top-2 text-xs text-gray-500 transition-all z-10">
+                {label}
+            </label>
+            <button 
+                type="button" 
+                onClick={() => setIsOpen(!isOpen)} 
+                className="w-full h-14 px-4 pt-4 pb-2 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all bg-white text-left flex justify-between items-center hover:border-gray-300"
+            >
+                <span className={selectedOption ? 'text-gray-900' : 'text-gray-500'}>
+                    {selectedOption ? selectedOption.label : placeholder}
+                </span>
+                <ChevronsUpDown size={16} className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            <div className={`absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto transition-all duration-200 ease-out origin-top ${
+                isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+            }`}>
+                {searchable && (
+                    <div className="p-3 border-b border-gray-100">
+                        <div className="relative">
+                            <input 
+                                type="text" 
+                                placeholder="Cari..." 
+                                value={searchTerm} 
+                                onChange={e => setSearchTerm(e.target.value)} 
+                                className="w-full pl-8 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all"
+                            />
+                            <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        </div>
+                    </div>
+                )}
+                
+                <ul className="py-1">
+                    {filteredOptions.length > 0 ? (
+                        filteredOptions.map((option) => (
+                            <li 
+                                key={option.value} 
+                                onClick={() => handleSelect(option.value)} 
+                                className={`px-4 py-3 hover:bg-teal-50 cursor-pointer transition-colors text-sm ${
+                                    value === option.value ? 'bg-teal-100 text-teal-900 font-medium' : 'text-gray-700'
+                                }`}
+                            >
+                                {option.label}
+                            </li>
+                        ))
+                    ) : (
+                        <li className="px-4 py-3 text-gray-500 text-sm italic">
+                            Tidak ada opsi yang ditemukan
+                        </li>
+                    )}
+                </ul>
+            </div>
+        </div>
+    );
+}
+
 // Komponen untuk menampilkan hasil pencarian dalam bentuk timeline
 function SearchResult({ sample }: { sample: Sample }) {
     const [history, setHistory] = useState<HistoryItem[]>([]);
 
-    // Updated workflow stages to match new internal app process
+    // Updated workflow stages with user-friendly labels for public
     const allStages = [
         "Menunggu",
-        "Disetujui Admin", 
         "Sampel Diterima",
-        "Proses Uji",
-        "Selesai"
+        "Kaji Ulang Selesai",
+        "Sedang Melakukan Pengujian",
+        "Pengujian Selesai",
+        "Laporan Hasil Uji"
     ];
 
     useEffect(() => {
@@ -106,8 +221,8 @@ function SearchResult({ sample }: { sample: Sample }) {
                                 <Info size={16} className="text-white"/>
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-xs text-gray-500 font-medium">Target Pengujian</p>
-                                <p className="text-sm font-semibold text-gray-800 truncate">{sample['Target HPI / HPIK'] || '-'}</p>
+                                <p className="text-xs text-gray-500 font-medium">Target Penyakit</p>
+                                <p className="text-sm font-semibold text-gray-800 truncate">{sample['Target Penyakit'] || '-'}</p>
                             </div>
                         </div>
                     </div>
@@ -132,7 +247,7 @@ function SearchResult({ sample }: { sample: Sample }) {
                     Riwayat Status
                 </h3>
                 
-                <ol className="relative">
+                <ol className="relative border-l-2 border-gray-200 ml-6">
                     {allStages.map((stage, index) => {
                         const historyEntry = history.find(h => h.status.toLowerCase() === stage.toLowerCase());
                         const hasThisStage = !!historyEntry;
@@ -140,14 +255,14 @@ function SearchResult({ sample }: { sample: Sample }) {
                         const isCurrent = !hasThisStage && index === lastCompletedStageIndex + 1;
 
                         return (
-                            <li key={stage} className="mb-6 ml-8 group">
-                                <span className={`absolute flex items-center justify-center w-10 h-10 rounded-full -left-5 ring-4 ring-white shadow-lg transition-all group-hover:scale-110 ${
+                            <li key={stage} className="mb-8 ml-6 group">
+                                <span className={`absolute flex items-center justify-center w-12 h-12 rounded-full -left-6 ring-4 ring-white shadow-lg transition-all group-hover:scale-110 ${
                                     isCurrent ? 'bg-teal-500' : (isCompleted ? 'bg-green-500' : 'bg-gray-400')
                                 }`}>
                                     {getStatusIcon(isCompleted, isCurrent)}
                                 </span>
                                 
-                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200/50 hover:bg-white hover:shadow-md transition-all duration-200">
+                                <div className="bg-gray-50 rounded-xl p-5 border border-gray-200/50 hover:bg-white hover:shadow-md transition-all duration-200">
                                     <h3 className={`text-lg font-semibold ${isCurrent || isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
                                         {stage}
                                     </h3>
@@ -180,6 +295,11 @@ export default function TrackerPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [executedSearch, setExecutedSearch] = useState({ term: '', category: '' });
     const [loadingMessage, setLoadingMessage] = useState('Mencari Sampel...');
+
+    // Handler untuk dropdown kategori
+    const handleCategorySelect = (value: string) => {
+        setSelectedCategory(value as Category);
+    };
 
     const { data: sample, isLoading, isError, error, isSuccess } = useQuery({
         queryKey: ['sample', executedSearch.category, executedSearch.term],
@@ -223,18 +343,17 @@ export default function TrackerPage() {
                 <form onSubmit={handleSearch} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="relative">
-                            <select 
-                                value={selectedCategory} 
-                                onChange={e => setSelectedCategory(e.target.value as Category)}
-                                className="peer w-full h-14 px-4 pt-4 pb-2 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all bg-white"
-                            >
-                                <option value="ikan">Ikan</option>
-                                <option value="hewan">Hewan</option>
-                                <option value="tumbuhan">Tumbuhan</option>
-                            </select>
-                            <label className="absolute left-4 top-2 text-xs text-gray-500 transition-all">
-                                Kategori Sampel
-                            </label>
+                            <CustomDropdown
+                                label="Kategori Sampel"
+                                value={selectedCategory}
+                                onSelect={handleCategorySelect}
+                                options={[
+                                    { value: 'ikan', label: 'Ikan' },
+                                    { value: 'hewan', label: 'Hewan' },
+                                    { value: 'tumbuhan', label: 'Tumbuhan' }
+                                ]}
+                                placeholder="Pilih Kategori"
+                            />
                         </div>
                         
                         <div className="md:col-span-2 relative">
